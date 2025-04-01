@@ -1,0 +1,68 @@
+name: Test & Deploy to EC2
+on:
+    push:
+        branches: [main]
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            # Check out the repository code
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            # # Set up Node.js environment for testing
+            # - name: Setup Node.js for testing
+            #   uses: actions/setup-node@v4
+            #   with:
+            #       node-version: '20'
+            #       cache: 'npm'
+
+            # # Install dependencies for testing
+            # - name: Install dependencies for testing
+            #   run: npm install
+
+            # # Run tests
+            # - name: Run tests
+            #   run: npm test
+            #   env:
+            #       NODE_ENV: test
+            #       JWT_SECRET: 127bc527cf1500da36d11d9d0b8d71d5c6f5517f17e7ae2a3d0aedcc4c86e87a
+
+            # Copy files to EC2
+            - name: Copy files to EC2
+              uses: appleboy/scp-action@master
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: '.'
+                  target: '/home/ec2-user/devopsproject'
+                  exclude: 'node_modules,.git'
+
+            # Create SSL certificate files on EC2
+            - name: Create SSL certificate files on EC2
+              uses: appleboy/ssh-action@master
+              env:
+                  SSL_PRIVATE_KEY: ${{ secrets.SSL_PRIVATE_KEY }}
+                  SSL_CERT: ${{ secrets.SSL_CERT }}
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  envs: SSL_PRIVATE_KEY,SSL_CERT
+                  script: |
+                      echo "$SSL_PRIVATE_KEY" > /home/ec2-user/devopsproject/privatekey.pem
+                      echo "$SSL_CERT" > /home/ec2-user/devopsproject/server.crt
+
+            # Execute deploy.sh script on EC2
+            - name: Execute deploy.sh script on EC2
+              uses: appleboy/ssh-action@master
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      cd /home/ec2-user/devopsproject
+                      export NODE_ENV=prod
+                      chmod +x deploy.sh
+                      bash deploy.sh

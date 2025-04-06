@@ -10,23 +10,23 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            # # Set up Node.js environment for testing
-            # - name: Setup Node.js for testing
-            #   uses: actions/setup-node@v4
-            #   with:
-            #       node-version: '20'
-            #       cache: 'npm'
+            # Set up Node.js environment for testing
+            - name: Setup Node.js for testing
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
 
-            # # Install dependencies for testing
-            # - name: Install dependencies for testing
-            #   run: npm install
+            # Install dependencies for testing
+            - name: Install dependencies for testing
+              run: npm install
 
-            # # Run tests
-            # - name: Run tests
-            #   run: npm test
-            #   env:
-            #       NODE_ENV: test
-            #       JWT_SECRET: 127bc527cf1500da36d11d9d0b8d71d5c6f5517f17e7ae2a3d0aedcc4c86e87a
+            # Run tests
+            - name: Run tests
+              run: npm test
+              env:
+                  NODE_ENV: test
+                  JWT_SECRET: 127bc527cf1500da36d11d9d0b8d71d5c6f5517f17e7ae2a3d0aedcc4c86e87a
 
             # Copy files to EC2
             - name: Copy files to EC2
